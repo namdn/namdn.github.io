@@ -456,6 +456,82 @@
       border-radius: 2px;
     }
 
+    /* ===== Parallel code + diagram view ===== */
+    .parallel-view {
+      position: relative;
+      /* Align left with body text, extend rightward into available space */
+      width: min(calc(50vw + 304px), 980px);
+      padding: 0;
+      box-sizing: border-box;
+      display: grid;
+      grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.6fr);
+      gap: 32px;
+      align-items: start;
+      margin-top: 36px;
+      margin-bottom: 36px;
+    }
+
+    .parallel-view__code {
+      position: sticky;
+      top: 24px;
+    }
+
+    .parallel-view__code pre {
+      margin: 0;
+      font-size: 13.5px;
+    }
+
+    .parallel-view__code-caption,
+    .parallel-view__diag-caption {
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+      margin-bottom: 10px;
+    }
+
+    .parallel-view__diagram .seq {
+      margin: 0;
+    }
+
+    @media (max-width: 900px) {
+      .parallel-view {
+        margin-left: 0;
+        transform: none;
+        max-width: 100%;
+        width: 100%;
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      .parallel-view__code {
+        position: static;
+      }
+    }
+
+    /* ===== Punchline closing ===== */
+    .story__punchline {
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-size: clamp(20px, 2.6vw, 25px);
+      font-weight: 600;
+      color: var(--heading);
+      line-height: 1.45;
+      letter-spacing: -0.012em;
+      margin: 2.5em 0 1.2em !important;
+    }
+
+    .story__punchline::before {
+      content: '';
+      display: block;
+      width: 60px;
+      height: 3px;
+      background: var(--accent);
+      margin-bottom: 28px;
+      border-radius: 2px;
+    }
+
     /* ===== Footer ===== */
     .story__footer {
       margin-top: 80px;
@@ -515,14 +591,14 @@
 
   <h1 class="story__title">Chúng tôi đã giải bài toán C10K thế nào</h1>
 
-  <p class="story__subtitle">Từ mổ source Nginx, vặt lông Redis đến "phát minh lại" async/await.</p>
+  <p class="story__subtitle">Từ mổ source Nginx, vặt lông Redis đến "phát minh ra" async/await.</p>
 
   <div class="story__lede">
     <p>Gần đây lướt mạng, thấy có ông anh nhắc lại bài toán C10K, tự nhiên bao nhiêu ký ức của cái thời 2008–2009 dội về.</p>
 
     <p>Đó là cái thời web bùng nổ, và anh em làm backend hồi đó ai cũng đụng cùng một bức tường: Làm sao cho một con server cõng được mười nghìn connection cùng lúc? Anh Dan Kegel gọi nó là C10K problem.</p>
 
-    <p>Cách cũ bấy giờ là thread-per-connection (kiểu Apache prefork). Code đọc dễ, debug dễ, nhưng chết ở scale. Mười nghìn thread tức là bay ngay vài chục GB RAM chỉ để... ngồi đợi I/O. Cộng thêm việc context switch liên tục khiến OS scheduler ngộp thở. Resource cháy hết cho overhead chứ không cho work thật. Anh em tôi biết mình phải tìm một con đường khác.</p>
+    <p>Cách cũ bấy giờ là thread-per-connection (kiểu Apache prefork). Code đọc dễ, debug dễ, nhưng chết ở scale. Mười nghìn thread tức là bay ngay vài chục GB RAM chỉ để... ngồi đợi I/O. Cộng thêm việc context switch liên tục khiến OS scheduler ngộp thở. Resource cháy hết cho overhead chứ không cho work thật. Bọn tôi biết mình phải tìm một con đường khác.</p>
 
     <p>Và đây là câu chuyện về cách chúng tôi đã giải nó, bằng cách chắp vá từ những người khổng lồ, và vô tình "chạm" vào tương lai của lập trình bất đồng bộ trước cả thế giới gần một thập kỷ.</p>
   </div>
@@ -576,7 +652,7 @@
     user_id = httpContext.path.split(<span class="tok-str">"/"</span>)[-<span class="tok-num">1</span>]
     <span class="tok-com"># ... build response ...</span></code></pre>
 
-    <p>Pattern đó áp dụng cho mọi protocol. Hồi anh em làm game backend, chỉ cần thay parser và dispatcher, đăng ký handler theo opcode thay vì HTTP path:</p>
+    <p>Pattern đó áp dụng cho mọi protocol. Hồi bọn tôi làm game backend, chỉ cần thay parser và dispatcher, đăng ký handler theo opcode thay vì HTTP path:</p>
 
 <pre data-lang="Python"><code><span class="tok-def">@socket_event</span>(opcode=<span class="tok-num">0x0A</span>)        <span class="tok-com"># MOVE</span>
 <span class="tok-key">def</span> on_move(player, dx, dy):
@@ -617,7 +693,7 @@
 
     <p>Đây chính là thứ mà mãi sau này cộng đồng mới đặt tên: <strong>Callback Hell</strong>. Bốn cấp indent cho một flow tầm thường. Try/catch vô nghĩa vì exception ném từ callback có lan ngược lên được đâu. Stack trace thì cụt ngủn ở event loop.</p>
 
-    <p>Workaround của anh em hồi đó là... tống hết logic xuống Stored Procedure của MySQL. Một cú <code>CALL sp_handle_order(...)</code> thay cho 5 callback lồng nhau. Sạch trên giấy, nhưng đau khổ trong dài hạn:</p>
+    <p>Workaround của bọn tôi hồi đó là... tống hết logic xuống Stored Procedure của MySQL. Một cú <code>CALL sp_handle_order(...)</code> thay cho 5 callback lồng nhau. Sạch trên giấy, nhưng đau khổ trong dài hạn:</p>
 
     <ul>
       <li>Logic bị xé đôi giữa Application và SQL.</li>
@@ -636,9 +712,9 @@
       Khoảnh khắc "Eureka" với <code>yield</code>
     </h2>
 
-    <p>Một hôm lang thang đọc tài liệu Python 2.5/2.6, tôi vớ phải một feature thực ra đã có từ PEP 255 (năm 2001): generator với keyword <code>yield</code>.</p>
+    <p>Một hôm lang thang đọc tài liệu Python 2.5/2.6, tôi vớ phải một feature thú vị: generator với keyword <code>yield</code>, kèm method bổ trợ <code>.send(value)</code> để caller truyền giá trị ngược vào.</p>
 
-    <p>Python đẻ ra <code>yield</code> vốn dĩ không phải để giải quyết bài toán concurrency. Nó sinh ra để viết iterator cho gọn (thay vì phải đẻ ra một class với <code>__iter__</code> / <code>__next__</code>):</p>
+    <p>Python đẻ ra cặp này không phải để giải quyết bài toán concurrency. <code>yield</code> sinh ra để viết iterator cho gọn (thay vì phải đẻ ra cả một class với <code>__iter__</code> / <code>__next__</code>):</p>
 
 <pre data-lang="Python"><code><span class="tok-key">def</span> fibonacci():
     a, b = <span class="tok-num">0</span>, <span class="tok-num">1</span>
@@ -646,21 +722,27 @@
         <span class="tok-key">yield</span> a
         a, b = b, a + b</code></pre>
 
-    <p>Đến PEP 342 (2005), Python thêm <code>.send(value)</code> — caller truyền <code>value</code> ngược vào generator, và <code>value</code> đó sẽ thành kết quả của biểu thức <code>yield</code> đã ngủ từ lần trước. Hồi đó người ta vẫn chỉ coi đây là "iterator nâng cao".</p>
+    <p>Còn <code>.send(value)</code> thì cho phép caller đẩy <code>value</code> vào generator — <code>value</code> đó trở thành kết quả của biểu thức <code>yield</code> đã ngủ từ lần trước. Hồi đó người ta vẫn chỉ coi combo này là "iterator nâng cao".</p>
 
     <p>Cái làm nên chuyện của <code>yield</code> là một thuộc tính cực kỳ ăn tiền: <strong>Một hàm có thể dừng giữa chừng, trả quyền điều khiển ra ngoài, rồi được caller "đánh thức" để chạy tiếp từ chính chỗ vừa dừng</strong> — với toàn bộ biến local vẫn nguyên xi.</p>
 
-    <p>Hơn nữa, <code>yield</code> là một biểu thức <strong>hai chiều</strong>: đẩy giá trị ra, và nhận giá trị vào (qua <code>.send()</code>). Nhìn cái flow này là hiểu ngay:</p>
+    <p>Hơn nữa, <code>yield</code> là một biểu thức <strong>hai chiều</strong>: đẩy giá trị ra, và nhận giá trị vào (qua <code>.send()</code>). Đặt code bên cạnh mô hình giao tiếp này là hiểu ngay:</p>
 
+    <div class="parallel-view">
+
+      <div class="parallel-view__code">
+        <div class="parallel-view__code-caption">Code</div>
 <pre data-lang="Python"><code><span class="tok-key">def</span> gen():
-    x = <span class="tok-key">yield</span> <span class="tok-num">10</span>        <span class="tok-com"># khi resume, send-value chui vào đây thành x</span>
-    y = <span class="tok-key">yield</span> <span class="tok-num">20</span>        <span class="tok-com"># lần resume kế tiếp, send-value chui vào đây thành y</span>
+    x = <span class="tok-key">yield</span> <span class="tok-num">10</span>
+    y = <span class="tok-key">yield</span> <span class="tok-num">20</span>
     <span class="tok-key">return</span> x + y</code></pre>
+      </div>
 
-    <p>Mô hình giao tiếp giữa Caller và Generator:</p>
+      <div class="parallel-view__diagram">
+        <div class="parallel-view__diag-caption">Mô hình giao tiếp</div>
 
-    <!-- ====== THE BIDIRECTIONAL DIAGRAM ====== -->
-    <div class="seq">
+        <!-- ====== THE BIDIRECTIONAL DIAGRAM ====== -->
+        <div class="seq">
       <div class="seq__headers">
         <div class="seq__header">Caller</div>
         <div class="seq__header" style="text-align: center; border-right: none; border-left: none;"></div>
@@ -787,6 +869,9 @@
       </div>
     </div>
 
+      </div><!-- /parallel-view__diagram -->
+    </div><!-- /parallel-view -->
+
     <p>Ba điểm cốt lõi lộ ra:</p>
 
     <ul>
@@ -809,7 +894,7 @@
 
     <p>Bên ngoài sẽ có một hàm <code>run</code> đóng vai trò "lái" generator: nhận object về, gọi <code>schedule()</code> của nó, lúc nào I/O xong thì lấy kết quả ném ngược vào generator. Lặp lại cho đến khi xong việc (<code>StopIteration</code>).</p>
 
-    <p>Anh em tôi gọi mỗi hàm như vậy là một <strong>task</strong> (mãi sau này từ học thuật <em>coroutine</em> mới thành chuẩn chung). Cái ghép nối tất cả lại — generator của user, event loop Redis, mấy cái YieldReturn — là một cái decorator <code>@task</code> đơn giản. Decorate một hàm có <code>yield</code> bằng <code>@task</code> thì khi gọi, hàm đó không chạy ngay mà trả về một <code>TaskReturn</code> (chính là một YieldReturn bọc generator).</p>
+    <p>Bọn tôi gọi mỗi hàm như vậy là một <strong>task</strong> (mãi sau này từ học thuật <em>coroutine</em> mới thành chuẩn chung). Cái ghép nối tất cả lại — generator của user, event loop Redis, mấy cái YieldReturn — là một cái decorator <code>@task</code> đơn giản. Decorate một hàm có <code>yield</code> bằng <code>@task</code> thì khi gọi, hàm đó không chạy ngay mà trả về một <code>TaskReturn</code> (chính là một YieldReturn bọc generator).</p>
 
     <p>Nhờ vậy cả hai use case cùng work trên một cơ chế:</p>
 
@@ -873,6 +958,10 @@
     <p>Mental model lúc này cực kỳ nhất quán: <strong>Gọi hàm để tạo task, <code>yield</code> để chạy và lấy kết quả</strong>. Cần chạy song song? Thêm <code>YieldParallel(*tasks)</code> (đúng cái mà sau này JS gọi là <code>Promise.all</code>, Python gọi là <code>asyncio.gather</code>). Cần timeout hay fallback? Đẻ ra <code>YieldFirst(*tasks)</code> (giống <code>Promise.race</code>).</p>
 
     <p>Mỗi class phụ trợ như vậy chưa tới 30 dòng code, không hề động chạm gì tới core. Xong cái core này, mọi thứ khác (Connection pooling, Rate limiting, Circuit breaker, Retry with backoff...) đều tự động vào guồng. Anh em dev ứng dụng cứ thế mà múa <code>yield</code>, không cần biết bên dưới đang direct hay qua pool.</p>
+
+    <p>Mà cái sướng nhất của mô hình này là anh em không cần đau đầu với mấy thứ kinh điển của thread-based concurrency. Không deadlock (cả process có mỗi một thread thì lấy đâu ra mà tự khóa chính mình), không race condition kiểu lock/mutex, không phải ngồi tune thread pool size, không có cái cảnh đang iterate dict thì thread khác chen vào sửa. Code đọc thẳng từ trên xuống như sync, chỉ thêm vài chữ <code>yield</code> đúng chỗ.</p>
+
+    <p>Scale thì cũng đơn giản nốt: server có bao nhiêu CPU thì bật bấy nhiêu process — thực ra phải là <code>n_cpu - 1</code> cái thôi, chừa một core cho OS với mấy thứ network handling, không thì lúc traffic peak server lăn ra đơ anh em không SSH vào nổi để vá. Mỗi process chạy một event loop độc lập, không share state với nhau (share thì lại quay về đúng cái thread issues vừa tránh được). Cần scale tiếp thì thêm máy, không phải tune gì thêm.</p>
   </section>
 
   <!-- ====== SECTION 6 ====== -->
@@ -890,7 +979,7 @@
       <li>Application code với hàm <code>@task</code> và vài chữ <code>yield</code> ở tầng trên cùng.</li>
     </ul>
 
-    <p>Hồi đó, anh em trong team ai cũng biết là mình vừa làm được một thứ rất xịn. Nhưng cũng vì thấy nó xịn quá, nên giấu nhẹm đi. <strong>Giấu như mèo giấu cứt.</strong> Không public, không viết blog, không open source.</p>
+    <p>Hồi đó anh em trong team thấy nó rất xịn nên giấu mịe đi. <strong>Giấu như mèo giấu cứt.</strong> Không public, không viết blog, không open source.</p>
 
     <p>Giờ ngồi nhìn lại, có lẽ đó là cái sai lớn nhất của cả hành trình.</p>
 
@@ -903,11 +992,11 @@
       <li>Rồi JavaScript theo sau với ES2017 (<code>async</code>/<code>await</code>). C# có từ bản 5.0. Rust ổn định vào 2019.</li>
     </ul>
 
-    <p>Mà thôi, chuyện cũ rồi. Giờ là thời AI, anh em hỏi gì cũng có GPT trả lời trong nốt nhạc, không ai rảnh đi viết code nữa. Mà thực ra cả bài này tôi cũng nhờ ChatGPT viết chứ dốt văn bỏ mịe.</p>
+    <p class="story__punchline">Mà thôi, chuyện cũ rồi. Giờ là thời AI, anh em hỏi gì cũng có GPT trả lời trong nốt nhạc, không ai rảnh đi viết code nữa. Mà thực ra cả bài này tôi cũng nhờ ChatGPT viết chứ dốt văn bỏ mịe.</p>
   </section>
 
   <div class="story__footer">
-    Viết cho vui · 2025
+    Viết cho vui · 2026
   </div>
 
 </article>
