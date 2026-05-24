@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chúng tôi đã giải bài toán C10K thế nào</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600;6..72,700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f7f1e6;
+      --bg-deep: #ede4d2;
+      --text: #2a231d;
+      --text-soft: #6b5d4d;
+      --heading: #14100c;
+      --rule: #d4c5a8;
+      --rule-soft: #e3d5b9;
+      --accent: #a8631a;
+      --accent-deep: #7a4811;
+      --send: #b94632;        /* terra cotta - caller's value going IN */
+      --send-soft: #f4d4cc;
+      --yield: #2d6477;       /* teal - generator's value coming OUT */
+      --yield-soft: #cfe0e6;
+      --code-bg: #1f1a16;
+      --code-text: #e8dec8;
+      --code-dim: #9c8e76;
+      --code-key: #d4905a;
+      --code-str: #9bb368;
+      --code-comment: #7a6b54;
+      --code-num: #c47a90;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Newsreader', Georgia, serif;
+      font-size: 19px;
+      line-height: 1.7;
+      margin: 0;
+      padding: 0;
+      font-feature-settings: "kern", "liga", "ss01";
+    }
+
+    /* Paper texture overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(circle at 20% 30%, rgba(168, 99, 26, 0.025) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(45, 100, 119, 0.02) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .story {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 80px 28px 120px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ===== Header ===== */
+    .story__eyebrow {
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-size: 13px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 600;
+      margin-bottom: 32px;
+    }
+
+    .story__title {
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-weight: 800;
+      font-size: clamp(38px, 6vw, 60px);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      color: var(--heading);
+      margin: 0 0 24px;
+    }
+
+    .story__subtitle {
+      font-family: 'Newsreader', serif;
+      font-style: italic;
+      font-weight: 400;
+      font-size: clamp(20px, 2.8vw, 26px);
+      line-height: 1.35;
+      color: var(--text-soft);
+      margin: 0 0 56px;
+    }
+
+    /* Dropcap on first paragraph */
+    .story__lede > p:first-of-type::first-letter {
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-weight: 800;
+      float: left;
+      font-size: 5.5em;
+      line-height: 0.85;
+      padding: 0.05em 0.08em 0 0;
+      color: var(--accent);
+      margin-top: 0.1em;
+    }
+
+    .story__lede p {
+      margin: 0 0 1.2em;
+    }
+
+    /* ===== Section headings ===== */
+    .story__section {
+      margin-top: 80px;
+    }
+
+    .story__section-heading {
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-weight: 700;
+      font-size: clamp(26px, 3.5vw, 34px);
+      line-height: 1.15;
+      letter-spacing: -0.015em;
+      color: var(--heading);
+      margin: 0 0 32px;
+      display: flex;
+      align-items: baseline;
+      gap: 20px;
+    }
+
+    .story__section-number {
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-weight: 800;
+      font-size: 0.95em;
+      color: var(--accent);
+      font-feature-settings: "tnum";
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .story__section-number::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: -8px;
+      bottom: 0.1em;
+      height: 8px;
+      background: var(--send-soft);
+      z-index: -1;
+      opacity: 0.7;
+    }
+
+    .story__subheading {
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-weight: 600;
+      font-size: 22px;
+      color: var(--heading);
+      margin: 48px 0 20px;
+      letter-spacing: -0.01em;
+    }
+
+    /* ===== Body text ===== */
+    .story p {
+      margin: 0 0 1.2em;
+    }
+
+    .story strong {
+      color: var(--heading);
+      font-weight: 600;
+    }
+
+    .story em {
+      font-style: italic;
+    }
+
+    .story a {
+      color: var(--accent);
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
+
+    /* ===== Inline code ===== */
+    code:not(pre code) {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.86em;
+      background: var(--bg-deep);
+      color: var(--accent-deep);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-weight: 500;
+      font-feature-settings: "calt" 0;
+    }
+
+    /* ===== Code blocks ===== */
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      border-radius: 8px;
+      padding: 22px 24px;
+      overflow-x: auto;
+      margin: 28px 0;
+      font-size: 14px;
+      line-height: 1.65;
+      box-shadow: 0 4px 24px rgba(31, 26, 22, 0.12), 0 1px 2px rgba(31, 26, 22, 0.08);
+      position: relative;
+    }
+
+    pre code {
+      font-family: 'JetBrains Mono', monospace;
+      font-feature-settings: "calt" 0;
+      background: none;
+      color: inherit;
+      padding: 0;
+    }
+
+    /* Lightweight syntax tinting via spans */
+    .tok-key { color: var(--code-key); }
+    .tok-str { color: var(--code-str); }
+    .tok-com { color: var(--code-comment); font-style: italic; }
+    .tok-num { color: var(--code-num); }
+    .tok-def { color: #e9c46a; }
+    .tok-dim { color: var(--code-dim); }
+
+    pre[data-lang]::before {
+      content: attr(data-lang);
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--code-dim);
+      font-weight: 600;
+    }
+
+    /* ===== Lists ===== */
+    .story ul {
+      list-style: none;
+      padding: 0;
+      margin: 24px 0;
+    }
+
+    .story ul li {
+      position: relative;
+      padding-left: 28px;
+      margin-bottom: 14px;
+    }
+
+    .story ul li::before {
+      content: '';
+      position: absolute;
+      left: 8px;
+      top: 0.8em;
+      width: 8px;
+      height: 2px;
+      background: var(--accent);
+    }
+
+    /* ===== Sequence Diagram ===== */
+    .seq {
+      margin: 32px 0;
+      background: var(--bg);
+      border: 1px solid var(--rule);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(31, 26, 22, 0.06);
+    }
+
+    .seq__headers {
+      display: grid;
+      grid-template-columns: 1fr 130px 1.4fr;
+      background: var(--bg-deep);
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .seq__header {
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      padding: 12px 18px;
+      color: var(--heading);
+    }
+
+    .seq__header:first-child {
+      border-right: 1px solid var(--rule);
+    }
+
+    .seq__header:last-child {
+      border-left: 1px solid var(--rule);
+    }
+
+    .seq__row {
+      display: grid;
+      grid-template-columns: 1fr 130px 1.4fr;
+      align-items: center;
+      min-height: 56px;
+    }
+
+    .seq__row + .seq__row {
+      border-top: 1px dashed var(--rule-soft);
+    }
+
+    .seq__row--divider {
+      min-height: 16px;
+      background: var(--bg-deep);
+      opacity: 0.4;
+    }
+
+    .seq__caller, .seq__gen {
+      padding: 14px 18px;
+      font-size: 14.5px;
+      line-height: 1.5;
+    }
+
+    .seq__caller {
+      border-right: 1px solid var(--rule-soft);
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text);
+    }
+
+    .seq__gen {
+      border-left: 1px solid var(--rule-soft);
+      font-family: 'Newsreader', serif;
+      color: var(--text-soft);
+    }
+
+    .seq__gen code {
+      background: var(--bg-deep);
+      color: var(--accent-deep);
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 13px;
+    }
+
+    .seq__mid {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+    }
+
+    /* Arrow component */
+    .arrow {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      width: 100%;
+      font-family: 'Bricolage Grotesque', sans-serif;
+    }
+
+    .arrow__shaft {
+      flex: 1;
+      height: 2px;
+      position: relative;
+    }
+
+    .arrow__pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      font-size: 12px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
+      letter-spacing: -0.02em;
+    }
+
+    .arrow__head {
+      width: 0;
+      height: 0;
+      border-top: 6px solid transparent;
+      border-bottom: 6px solid transparent;
+    }
+
+    /* SEND direction (caller → generator) */
+    .arrow--send {
+      color: var(--send);
+    }
+
+    .arrow--send .arrow__shaft {
+      background: linear-gradient(to right, transparent 0%, var(--send) 20%, var(--send) 100%);
+    }
+
+    .arrow--send .arrow__head {
+      border-left: 9px solid var(--send);
+    }
+
+    .arrow--send .arrow__pill {
+      background: var(--send);
+      color: #fff;
+    }
+
+    /* YIELD direction (generator → caller) */
+    .arrow--yield {
+      color: var(--yield);
+      flex-direction: row-reverse;
+    }
+
+    .arrow--yield .arrow__shaft {
+      background: linear-gradient(to left, transparent 0%, var(--yield) 20%, var(--yield) 100%);
+    }
+
+    .arrow--yield .arrow__head {
+      border-right: 9px solid var(--yield);
+    }
+
+    .arrow--yield .arrow__pill {
+      background: var(--yield);
+      color: #fff;
+    }
+
+    /* Inline pill helpers in description text */
+    .pill {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      font-size: 0.86em;
+      padding: 1px 8px;
+      border-radius: 999px;
+      letter-spacing: -0.02em;
+    }
+
+    .pill--send { background: var(--send); color: #fff; }
+    .pill--yield { background: var(--yield); color: #fff; }
+
+    /* Legend */
+    .seq__legend {
+      display: flex;
+      justify-content: center;
+      gap: 28px;
+      padding: 14px;
+      background: var(--bg-deep);
+      border-top: 1px solid var(--rule);
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-size: 12px;
+      color: var(--text-soft);
+    }
+
+    .seq__legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .seq__legend-swatch {
+      width: 18px;
+      height: 3px;
+      border-radius: 2px;
+    }
+
+    /* ===== Footer ===== */
+    .story__footer {
+      margin-top: 80px;
+      padding-top: 40px;
+      border-top: 1px solid var(--rule);
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-size: 13px;
+      color: var(--text-soft);
+      text-align: center;
+      letter-spacing: 0.02em;
+    }
+
+    /* ===== Mobile ===== */
+    @media (max-width: 640px) {
+      .story {
+        padding: 50px 20px 80px;
+      }
+
+      .story__lede > p:first-of-type::first-letter {
+        font-size: 4.5em;
+      }
+
+      .seq__headers,
+      .seq__row {
+        grid-template-columns: 1fr 80px 1.3fr;
+      }
+
+      .seq__caller, .seq__gen {
+        padding: 10px 12px;
+        font-size: 13px;
+      }
+
+      .seq__header {
+        font-size: 10px;
+        padding: 10px 12px;
+      }
+
+      .arrow__pill {
+        font-size: 10px;
+        padding: 2px 6px;
+      }
+
+      pre {
+        font-size: 12.5px;
+        padding: 18px 16px;
+        margin-left: -20px;
+        margin-right: -20px;
+        border-radius: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+<article class="story">
+
+  <div class="story__eyebrow">Hồi ức · 2008–2009</div>
+
+  <h1 class="story__title">Chúng tôi đã giải bài toán C10K thế nào</h1>
+
+  <p class="story__subtitle">Từ mổ source Nginx, vặt lông Redis đến "phát minh lại" async/await.</p>
+
+  <div class="story__lede">
+    <p>Gần đây lướt mạng, thấy có ông anh nhắc lại bài toán C10K, tự nhiên bao nhiêu ký ức của cái thời 2008–2009 dội về.</p>
+
+    <p>Đó là cái thời web bùng nổ, và anh em làm backend hồi đó ai cũng đụng cùng một bức tường: Làm sao cho một con server cõng được mười nghìn connection cùng lúc? Anh Dan Kegel gọi nó là C10K problem.</p>
+
+    <p>Cách cũ bấy giờ là thread-per-connection (kiểu Apache prefork). Code đọc dễ, debug dễ, nhưng chết ở scale. Mười nghìn thread tức là bay ngay vài chục GB RAM chỉ để... ngồi đợi I/O. Cộng thêm việc context switch liên tục khiến OS scheduler ngộp thở. Resource cháy hết cho overhead chứ không cho work thật. Anh em tôi biết mình phải tìm một con đường khác.</p>
+
+    <p>Và đây là câu chuyện về cách chúng tôi đã giải nó, bằng cách chắp vá từ những người khổng lồ, và vô tình "chạm" vào tương lai của lập trình bất đồng bộ trước cả thế giới gần một thập kỷ.</p>
+  </div>
+
+  <!-- ====== SECTION 1 ====== -->
+  <section class="story__section">
+    <h2 class="story__section-heading">
+      <span class="story__section-number">1</span>
+      Bài học vỡ lòng từ Nginx
+    </h2>
+
+    <p>Anh Nga ngố Igor Sysoev làm Nginx từ 2004 đi một con đường khác hẳn: event-driven, non-blocking I/O, một worker process cõng hàng vạn connection.</p>
+
+    <p>Mổ source Nginx ra, cái core của nó đơn giản đến mức choáng váng. Nó chỉ là một vòng lặp:</p>
+
+<pre data-lang="C"><code><span class="tok-key">for</span> (;;) {
+    timer = find_next_timer();
+    events = wait_for_io(timer);   <span class="tok-com">// Chỗ duy nhất block</span>
+    <span class="tok-key">for</span> (each event <span class="tok-key">in</span> events) {
+        handler(event);             <span class="tok-com">// Không bao giờ block</span>
+    }
+    process_timers();
+}</code></pre>
+
+    <p>Dòng <code>wait_for_io()</code> thì tùy hệ điều hành. Windows hồi đó chỉ có <code>select()</code> chạy O(n) theo số file descriptor (fd), còn Linux 2.6 đã có <code>epoll</code> chạy O(1), gồng được hàng trăm nghìn fd. Anh em quyết định ôm Linux là chuyện đương nhiên.</p>
+
+    <p>Có điều codebase Nginx to oành, đầy macro của anh Igor, viết để chạy production chứ không phải để học. Đọc mãi không vô. May thay, đầu năm 2009, một "vị cứu tinh" khác xuất hiện.</p>
+  </section>
+
+  <!-- ====== SECTION 2 ====== -->
+  <section class="story__section">
+    <h2 class="story__section-heading">
+      <span class="story__section-number">2</span>
+      Mổ source Redis để học Event Loop
+    </h2>
+
+    <p>Tháng 2/2009, anh Ý đảo Sicilia — antirez — công bố Redis. Một thread, một event loop, mà throughput khủng khiếp.</p>
+
+    <p>Bí mật nằm gọn trong vài file: <code>ae.h</code> cho interface, <code>ae.c</code> cho core (chỉ tầm 400 dòng), rồi <code>ae_epoll.c</code> / <code>ae_kqueue.c</code> / <code>ae_select.c</code> cho từng OS. Tên <code>ae</code> viết tắt của "A simple Event-driven programming library". Cả file chính tôi ngồi đọc một buổi sáng là xong.</p>
+
+    <p>API public gọn lỏn vài hàm: tạo/hủy event loop, đăng ký file event cho một fd, time event, <code>aeMain</code> để khởi động vòng lặp. Phần platform-specific giấu sạch sau wrapper thống nhất.</p>
+
+    <p>Anh em tôi bê nguyên <code>ae</code> về xài luôn, không động dao kéo gì vào bên trong. Cái chúng tôi mang lên tầng framework ứng dụng là <strong>kiến trúc</strong> — cách tách public API khỏi platform-specific code.</p>
+
+    <h3 class="story__subheading">Event-driven tự nhiên "dễ như ăn kẹo"</h3>
+
+    <p>Có cái event loop từ Redis trong tay, viết event-driven nhàn tênh. Có fd ready? Đăng ký callback. Cần timer? Đẩy vào time event queue. Engine <code>ae</code> lo nốt. Cái HTTP server tự nhiên rơi xuống: accept-loop trên port 80, parse request ra, tra routing table, gọi handler đã đăng ký.</p>
+
+<pre data-lang="Python"><code><span class="tok-def">@http.get</span>(<span class="tok-str">"/users/*"</span>)
+<span class="tok-key">def</span> get_user(httpContext):
+    user_id = httpContext.path.split(<span class="tok-str">"/"</span>)[-<span class="tok-num">1</span>]
+    <span class="tok-com"># ... build response ...</span></code></pre>
+
+    <p>Pattern đó áp dụng cho mọi protocol. Hồi anh em làm game backend, chỉ cần thay parser và dispatcher, đăng ký handler theo opcode thay vì HTTP path:</p>
+
+<pre data-lang="Python"><code><span class="tok-def">@socket_event</span>(opcode=<span class="tok-num">0x0A</span>)        <span class="tok-com"># MOVE</span>
+<span class="tok-key">def</span> on_move(player, dx, dy):
+    player.x += dx; player.y += dy
+    broadcast_to_room(player.room_id, MoveEvent(player.id, dx, dy))</code></pre>
+
+    <p>Engine không đổi một dòng. Cùng một backend vừa cõng REST API cho team product, vừa cõng game realtime cho team game. Đây mới đúng là "platform" — một cái nền cho nhiều sản phẩm khác nhau đứng lên, chứ không chỉ là một con server giải C10K.</p>
+  </section>
+
+  <!-- ====== SECTION 3 ====== -->
+  <section class="story__section">
+    <h2 class="story__section-heading">
+      <span class="story__section-number">3</span>
+      Nửa kia của tảng băng: Nỗi đau mang tên Callback Hell
+    </h2>
+
+    <p>Đến đây, Redis giải đẹp phần <em>connection đi vào</em>. Còn phần <em>I/O đi ra</em> thì Redis bó tay.</p>
+
+    <p>Vì khi handler chạy, nghiệp vụ thật mới bắt đầu: query MySQL lấy user, gọi HTTP service nội bộ lấy profile, ghi log, v.v. Mọi bước I/O đó phải non-blocking, vì chỉ cần một query MySQL chậm là đóng băng cả 9.999 connection còn lại đang share cái event loop kia.</p>
+
+    <p>Hồi 2008–2009, để viết code non-blocking, anh em chỉ có hai lựa chọn, và cả hai đều... "khó chịu thí mịa".</p>
+
+    <ul>
+      <li><strong>Thread-per-connection</strong>: Dễ đọc, dễ try/catch, nhưng chết với 10K connection vì tốn RAM và overhead.</li>
+      <li><strong>Event-driven với callback</strong>: Cách mà Node.js (vừa ra mắt 2009) đang đẩy lên trend.</li>
+    </ul>
+
+    <p>Lúc Node.js mới ra, anh em cũng phát cuồng với cảm giác hiện đại, "đây mới là tương lai". Nhưng đến lúc viết app thật, lồng 5–7 tầng cho một flow nghiệp vụ phức tạp, mới thấy tận cùng của nỗi đau:</p>
+
+<pre data-lang="Python"><code><span class="tok-key">def</span> handle_request(conn):
+    <span class="tok-key">def</span> on_read(req):
+        <span class="tok-key">def</span> on_user(user):
+            <span class="tok-key">def</span> on_profile(profile):
+                conn.write(render(user, profile))
+            http.get_async(<span class="tok-str">f"http://profile-svc/{user.id}"</span>, on_profile)
+        db.query_async(<span class="tok-str">"SELECT * FROM users WHERE id=?"</span>, req.user_id, on_user)
+    conn.read_async(on_read)</code></pre>
+
+    <p>Đây chính là thứ mà mãi sau này cộng đồng mới đặt tên: <strong>Callback Hell</strong>. Bốn cấp indent cho một flow tầm thường. Try/catch vô nghĩa vì exception ném từ callback có lan ngược lên được đâu. Stack trace thì cụt ngủn ở event loop.</p>
+
+    <p>Workaround của anh em hồi đó là... tống hết logic xuống Stored Procedure của MySQL. Một cú <code>CALL sp_handle_order(...)</code> thay cho 5 callback lồng nhau. Sạch trên giấy, nhưng đau khổ trong dài hạn:</p>
+
+    <ul>
+      <li>Logic bị xé đôi giữa Application và SQL.</li>
+      <li>Deploy đồng bộ là một cơn ác mộng.</li>
+      <li>Code không thể test được (phải dựng MySQL thật, seed data thật).</li>
+      <li>Đau nhất: SQL không có đủ hàm, anh em phải chế hẳn MySQL plugin viết bằng C, compile thành shared library load vào MySQL server.</li>
+    </ul>
+
+    <p>Đến lúc phải hack MySQL bằng C plugin chỉ để vá một mô hình lập trình sai từ đầu, chúng tôi biết mình đã đi quá xa rồi.</p>
+  </section>
+
+  <!-- ====== SECTION 4 ====== -->
+  <section class="story__section">
+    <h2 class="story__section-heading">
+      <span class="story__section-number">4</span>
+      Khoảnh khắc "Eureka" với <code>yield</code>
+    </h2>
+
+    <p>Một hôm lang thang đọc tài liệu Python 2.5/2.6, tôi vớ phải một feature thực ra đã có từ PEP 255 (năm 2001): generator với keyword <code>yield</code>.</p>
+
+    <p>Python đẻ ra <code>yield</code> vốn dĩ không phải để giải quyết bài toán concurrency. Nó sinh ra để viết iterator cho gọn (thay vì phải đẻ ra một class với <code>__iter__</code> / <code>__next__</code>):</p>
+
+<pre data-lang="Python"><code><span class="tok-key">def</span> fibonacci():
+    a, b = <span class="tok-num">0</span>, <span class="tok-num">1</span>
+    <span class="tok-key">while</span> <span class="tok-key">True</span>:
+        <span class="tok-key">yield</span> a
+        a, b = b, a + b</code></pre>
+
+    <p>Đến PEP 342 (2005), Python thêm <code>.send(value)</code> — caller truyền <code>value</code> ngược vào generator, và <code>value</code> đó sẽ thành kết quả của biểu thức <code>yield</code> đã ngủ từ lần trước. Hồi đó người ta vẫn chỉ coi đây là "iterator nâng cao".</p>
+
+    <p>Cái làm nên chuyện của <code>yield</code> là một thuộc tính cực kỳ ăn tiền: <strong>Một hàm có thể dừng giữa chừng, trả quyền điều khiển ra ngoài, rồi được caller "đánh thức" để chạy tiếp từ chính chỗ vừa dừng</strong> — với toàn bộ biến local vẫn nguyên xi.</p>
+
+    <p>Hơn nữa, <code>yield</code> là một biểu thức <strong>hai chiều</strong>: đẩy giá trị ra, và nhận giá trị vào (qua <code>.send()</code>). Nhìn cái flow này là hiểu ngay:</p>
+
+<pre data-lang="Python"><code><span class="tok-key">def</span> gen():
+    x = <span class="tok-key">yield</span> <span class="tok-num">10</span>        <span class="tok-com"># khi resume, send-value chui vào đây thành x</span>
+    y = <span class="tok-key">yield</span> <span class="tok-num">20</span>        <span class="tok-com"># lần resume kế tiếp, send-value chui vào đây thành y</span>
+    <span class="tok-key">return</span> x + y</code></pre>
+
+    <p>Mô hình giao tiếp giữa Caller và Generator:</p>
+
+    <!-- ====== THE BIDIRECTIONAL DIAGRAM ====== -->
+    <div class="seq">
+      <div class="seq__headers">
+        <div class="seq__header">Caller</div>
+        <div class="seq__header" style="text-align: center; border-right: none; border-left: none;"></div>
+        <div class="seq__header">Generator</div>
+      </div>
+
+      <!-- init -->
+      <div class="seq__row">
+        <div class="seq__caller">g = gen()</div>
+        <div class="seq__mid"></div>
+        <div class="seq__gen"><em>(paused, chưa chạy dòng nào)</em></div>
+      </div>
+
+      <div class="seq__row seq__row--divider">
+        <div class="seq__caller"></div>
+        <div class="seq__mid"></div>
+        <div class="seq__gen"></div>
+      </div>
+
+      <!-- next(g) call -->
+      <div class="seq__row">
+        <div class="seq__caller">val = next(g)</div>
+        <div class="seq__mid">
+          <div class="arrow arrow--send">
+            <div class="arrow__shaft"></div>
+            <div class="arrow__head"></div>
+          </div>
+        </div>
+        <div class="seq__gen">chạy đến <code>yield 10</code>, dừng, đẩy <span class="pill pill--yield">10</span> ra</div>
+      </div>
+
+      <!-- yield 10 returns -->
+      <div class="seq__row">
+        <div class="seq__caller">val == <span class="pill pill--yield">10</span></div>
+        <div class="seq__mid">
+          <div class="arrow arrow--yield">
+            <div class="arrow__shaft"></div>
+            <div class="arrow__head"></div>
+            <div class="arrow__pill">10</div>
+          </div>
+        </div>
+        <div class="seq__gen"></div>
+      </div>
+
+      <div class="seq__row seq__row--divider">
+        <div class="seq__caller"></div>
+        <div class="seq__mid"></div>
+        <div class="seq__gen"></div>
+      </div>
+
+      <!-- send(100) -->
+      <div class="seq__row">
+        <div class="seq__caller">val = g.send(<span class="pill pill--send">100</span>)</div>
+        <div class="seq__mid">
+          <div class="arrow arrow--send">
+            <div class="arrow__shaft"></div>
+            <div class="arrow__pill">100</div>
+            <div class="arrow__head"></div>
+          </div>
+        </div>
+        <div class="seq__gen">
+          <span class="pill pill--send">100</span> chui vào, <code>x = 100</code><br>
+          chạy đến <code>yield 20</code>, dừng, đẩy <span class="pill pill--yield">20</span> ra
+        </div>
+      </div>
+
+      <!-- yield 20 returns -->
+      <div class="seq__row">
+        <div class="seq__caller">val == <span class="pill pill--yield">20</span></div>
+        <div class="seq__mid">
+          <div class="arrow arrow--yield">
+            <div class="arrow__shaft"></div>
+            <div class="arrow__head"></div>
+            <div class="arrow__pill">20</div>
+          </div>
+        </div>
+        <div class="seq__gen"></div>
+      </div>
+
+      <div class="seq__row seq__row--divider">
+        <div class="seq__caller"></div>
+        <div class="seq__mid"></div>
+        <div class="seq__gen"></div>
+      </div>
+
+      <!-- send(200) -->
+      <div class="seq__row">
+        <div class="seq__caller">val = g.send(<span class="pill pill--send">200</span>)</div>
+        <div class="seq__mid">
+          <div class="arrow arrow--send">
+            <div class="arrow__shaft"></div>
+            <div class="arrow__pill">200</div>
+            <div class="arrow__head"></div>
+          </div>
+        </div>
+        <div class="seq__gen">
+          <span class="pill pill--send">200</span> chui vào, <code>y = 200</code><br>
+          chạy đến <code>return x + y</code>
+        </div>
+      </div>
+
+      <!-- StopIteration -->
+      <div class="seq__row">
+        <div class="seq__caller">StopIteration(<span class="pill pill--yield">300</span>)</div>
+        <div class="seq__mid">
+          <div class="arrow arrow--yield">
+            <div class="arrow__shaft"></div>
+            <div class="arrow__head"></div>
+            <div class="arrow__pill">300</div>
+          </div>
+        </div>
+        <div class="seq__gen"></div>
+      </div>
+
+      <div class="seq__legend">
+        <div class="seq__legend-item">
+          <div class="seq__legend-swatch" style="background: var(--send);"></div>
+          <span>send vào (caller → generator)</span>
+        </div>
+        <div class="seq__legend-item">
+          <div class="seq__legend-swatch" style="background: var(--yield);"></div>
+          <span>yield ra (generator → caller)</span>
+        </div>
+      </div>
+    </div>
+
+    <p>Ba điểm cốt lõi lộ ra:</p>
+
+    <ul>
+      <li><code>g.send(value)</code> đẩy <code>value</code> vào chỗ <code>yield</code> đã ngủ từ lần trước.</li>
+      <li>Generator chạy tiếp đến <code>yield</code> kế tiếp, đẩy vế phải của nó ra.</li>
+      <li>Cái vế phải ấy chính là return value của hàm <code>send</code>.</li>
+    </ul>
+
+    <p>Có cơ chế này thì một hàm Runner hoàn toàn có thể làm được việc: ném kết quả I/O vừa xong vào generator (qua <code>send</code>), nhận việc kế tiếp ra, rồi lặp lại. Và ai sẽ gọi <code>.send()</code> để đánh thức generator khi I/O xong? Câu trả lời đã nằm sẵn trên bàn: chính cái event loop <code>ae.c</code> chôm từ Redis.</p>
+  </section>
+
+  <!-- ====== SECTION 5 ====== -->
+  <section class="story__section">
+    <h2 class="story__section-heading">
+      <span class="story__section-number">5</span>
+      Ráp lại thành Coroutine Model (async/await đồ đá)
+    </h2>
+
+    <p>Ý tưởng gom lại cực gọn: Khi code application cần I/O, nó <em>không gọi callback nữa</em>. Nó <code>yield</code> ra một object mô tả việc cần làm.</p>
+
+    <p>Bên ngoài sẽ có một hàm <code>run</code> đóng vai trò "lái" generator: nhận object về, gọi <code>schedule()</code> của nó, lúc nào I/O xong thì lấy kết quả ném ngược vào generator. Lặp lại cho đến khi xong việc (<code>StopIteration</code>).</p>
+
+    <p>Anh em tôi gọi mỗi hàm như vậy là một <strong>task</strong> (mãi sau này từ học thuật <em>coroutine</em> mới thành chuẩn chung). Cái ghép nối tất cả lại — generator của user, event loop Redis, mấy cái YieldReturn — là một cái decorator <code>@task</code> đơn giản. Decorate một hàm có <code>yield</code> bằng <code>@task</code> thì khi gọi, hàm đó không chạy ngay mà trả về một <code>TaskReturn</code> (chính là một YieldReturn bọc generator).</p>
+
+    <p>Nhờ vậy cả hai use case cùng work trên một cơ chế:</p>
+
+    <ul>
+      <li>Listener gọi <code>handle_request(conn)</code> lấy TaskReturn đẩy vào event loop để chạy.</li>
+      <li>Trong code, <code>yield other_task()</code> chỉ là yield một YieldReturn bình thường — framework tự drive sub-task đến hết rồi trả kết quả về.</li>
+    </ul>
+
+    <p>Một decorator, hai use case, không có syntax riêng cho sub-task call. Flow callback hell nát bét ở trên, giờ viết lại đẹp như mơ:</p>
+
+<pre data-lang="Python"><code><span class="tok-def">@task</span>
+<span class="tok-key">def</span> handle_request(conn):
+    req     = <span class="tok-key">yield</span> conn.read()
+    user    = <span class="tok-key">yield</span> db.query(<span class="tok-str">"SELECT * FROM users WHERE id=?"</span>, req.user_id)
+    profile = <span class="tok-key">yield</span> http.get(<span class="tok-str">f"http://profile-svc/{user.id}"</span>)
+    <span class="tok-key">yield</span> log.write(<span class="tok-str">f"served {user.id}"</span>)
+    <span class="tok-key">yield</span> conn.write(render(user, profile))</code></pre>
+
+    <p>Cùng logic, cùng performance, chạy trên cùng cái event loop một thread cõng hàng vạn connection. Khác mỗi việc rải mấy chữ <code>yield</code> vào đúng chỗ. Code tuần tự, bắt try/catch ngon lành.</p>
+
+    <p>Toàn bộ pattern này được chúng tôi gói gọn trong vài chục dòng code. Mỗi loại I/O là một subclass nhỏ của <code>YieldReturn</code>, tự override hàm <code>schedule()</code>:</p>
+
+<pre data-lang="Python"><code><span class="tok-key">import</span> functools
+
+<span class="tok-key">class</span> <span class="tok-def">YieldReturn</span>:
+    <span class="tok-key">def</span> schedule(self):
+        <span class="tok-key">raise</span> <span class="tok-def">NotImplementedError</span>
+
+<span class="tok-key">class</span> <span class="tok-def">MySqlReturn</span>(<span class="tok-def">YieldReturn</span>):
+    <span class="tok-key">def</span> __init__(self, sql): self.sql = sql
+    <span class="tok-key">def</span> schedule(self):
+        <span class="tok-com"># Bridging giữa callback và event loop giấu hết vào đây</span>
+        <span class="tok-key">return</span> loop.await_mysql(self.sql)
+
+<span class="tok-key">class</span> <span class="tok-def">db</span>:
+    <span class="tok-def">@staticmethod</span>
+    <span class="tok-key">def</span> query(sql): <span class="tok-key">return</span> MySqlReturn(sql)
+
+<span class="tok-key">def</span> run(gen):
+    <span class="tok-str">"""Drive generator đến khi kết thúc, trả về final value."""</span>
+    value = <span class="tok-key">None</span>
+    <span class="tok-key">while</span> <span class="tok-key">True</span>:
+        <span class="tok-key">try</span>:
+            yr = gen.send(value)
+        <span class="tok-key">except</span> <span class="tok-def">StopIteration</span> <span class="tok-key">as</span> stop:
+            <span class="tok-key">return</span> getattr(stop, <span class="tok-str">'value'</span>, <span class="tok-key">None</span>)
+        value = yr.schedule()
+
+<span class="tok-key">class</span> <span class="tok-def">TaskReturn</span>(<span class="tok-def">YieldReturn</span>):
+    <span class="tok-str">"""Bọc một generator. Triết lý: yield một TaskReturn = chạy nó đến hết."""</span>
+    <span class="tok-key">def</span> __init__(self, gen): self.gen = gen
+    <span class="tok-key">def</span> schedule(self):
+        <span class="tok-key">return</span> run(self.gen)
+
+<span class="tok-key">def</span> task(genfunc):
+    <span class="tok-def">@functools.wraps</span>(genfunc)
+    <span class="tok-key">def</span> wrapper(*args, **kwargs):
+        <span class="tok-key">return</span> TaskReturn(genfunc(*args, **kwargs))
+    <span class="tok-key">return</span> wrapper</code></pre>
+
+    <p>Mental model lúc này cực kỳ nhất quán: <strong>Gọi hàm để tạo task, <code>yield</code> để chạy và lấy kết quả</strong>. Cần chạy song song? Thêm <code>YieldParallel(*tasks)</code> (đúng cái mà sau này JS gọi là <code>Promise.all</code>, Python gọi là <code>asyncio.gather</code>). Cần timeout hay fallback? Đẻ ra <code>YieldFirst(*tasks)</code> (giống <code>Promise.race</code>).</p>
+
+    <p>Mỗi class phụ trợ như vậy chưa tới 30 dòng code, không hề động chạm gì tới core. Xong cái core này, mọi thứ khác (Connection pooling, Rate limiting, Circuit breaker, Retry with backoff...) đều tự động vào guồng. Anh em dev ứng dụng cứ thế mà múa <code>yield</code>, không cần biết bên dưới đang direct hay qua pool.</p>
+  </section>
+
+  <!-- ====== SECTION 6 ====== -->
+  <section class="story__section">
+    <h2 class="story__section-heading">
+      <span class="story__section-number">6</span>
+      Nhìn lại: Bài học đắt giá về sự chia sẻ
+    </h2>
+
+    <p>Cái framework "nhà làm" này được gói trong 3 layer xếp chồng:</p>
+
+    <ul>
+      <li>Event loop bê nguyên từ Redis <code>ae</code> ở đáy.</li>
+      <li><code>YieldReturn</code> + <code>run</code> + subclass ở giữa.</li>
+      <li>Application code với hàm <code>@task</code> và vài chữ <code>yield</code> ở tầng trên cùng.</li>
+    </ul>
+
+    <p>Hồi đó, anh em trong team ai cũng biết là mình vừa làm được một thứ rất xịn. Nhưng cũng vì thấy nó xịn quá, nên giấu nhẹm đi. <strong>Giấu như mèo giấu cứt.</strong> Không public, không viết blog, không open source.</p>
+
+    <p>Giờ ngồi nhìn lại, có lẽ đó là cái sai lớn nhất của cả hành trình.</p>
+
+    <p>Vài năm sau, cả ngành công nghiệp phần mềm tự đi đến đúng cái mô hình ấy bằng những con đường vòng:</p>
+
+    <ul>
+      <li>Tornado (2009) đi lối yield-based coroutine. <em>(Hồi Tornado ra cái <code>@coroutine</code>, anh em trong team còn đùa nhau là <strong>thằng này ăn cắp của anh Nam</strong> kìa.)</em></li>
+      <li>Python ra PEP 380 (2012) thêm <code>yield from</code>.</li>
+      <li>Python ra PEP 492 (2015) đưa <code>async</code>/<code>await</code> làm keyword chính thức — mà bản chất nó chính là syntactic sugar cho đúng cái cơ chế mà anh em tôi đã cặm cụi tự build bằng tay từ 6 năm trước.</li>
+      <li>Rồi JavaScript theo sau với ES2017 (<code>async</code>/<code>await</code>). C# có từ bản 5.0. Rust ổn định vào 2019.</li>
+    </ul>
+
+    <p>Mà thôi, chuyện cũ rồi. Giờ là thời AI, anh em hỏi gì cũng có GPT trả lời trong nốt nhạc, không ai rảnh đi viết code nữa. Mà thực ra cả bài này tôi cũng nhờ ChatGPT viết chứ dốt văn bỏ mịe.</p>
+  </section>
+
+  <div class="story__footer">
+    Viết cho vui · 2025
+  </div>
+
+</article>
+</body>
+</html>
