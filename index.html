@@ -623,7 +623,7 @@
     process_timers();
 }</code></pre>
 
-    <p>Dòng <code>wait_for_io()</code> thì tùy hệ điều hành. Windows hồi đó chỉ có <code>select()</code> chạy O(n) theo số file descriptor (fd), còn Linux 2.6 đã có <code>epoll</code> chạy O(1), gồng được hàng trăm nghìn fd. Anh em quyết định ôm Linux là chuyện đương nhiên.</p>
+    <p>Dòng <code>wait_for_io()</code> thì tùy hệ điều hành. Windows hồi đó chỉ có <code>select()</code> chạy O(n) theo số file descriptor (fd), còn Linux 2.6 đã có <code>epoll</code> chạy O(1), gồng được hàng trăm nghìn fd. Thế là anh em ôm mịe Linux, vừa đỡ phải mất tiền bản quyền</p>
 
     <p>Có điều codebase Nginx to oành, đầy macro của anh Igor, viết để chạy production chứ không phải để học. Đọc mãi không vô. May thay, đầu năm 2009, một "vị cứu tinh" khác xuất hiện.</p>
   </section>
